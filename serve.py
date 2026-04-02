@@ -40,16 +40,20 @@ def health():
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest):
+    # 피처 검증은 테스트 모드와 무관하게 항상 실행
+    if len(req.features) != 13:
+        raise HTTPException(status_code=422, detail=f"피처 13개 필요, {len(req.features)}개 입력됨")
+
     if TESTING:
         return PredictResponse(
             prediction=0,
             wine_type=WINE_LABELS[0],
             probabilities=[0.98, 0.01, 0.01]
         )
+
     if model is None:
         raise HTTPException(status_code=503, detail="모델이 로드되지 않았습니다")
-    if len(req.features) != 13:
-        raise HTTPException(status_code=422, detail=f"피처 13개 필요, {len(req.features)}개 입력됨")
+
     X = np.array(req.features).reshape(1, -1)
     pred  = int(model.predict(X)[0])
     proba = model.predict_proba(X)[0].tolist()
