@@ -2,6 +2,7 @@ import mlflow.sklearn
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import List
 import os
 
 app = FastAPI(title="Wine Classifier API", version="1.0")
@@ -21,12 +22,12 @@ else:
         model = None
 
 class PredictRequest(BaseModel):
-    features: list
+    features: List[float]
 
 class PredictResponse(BaseModel):
     prediction: int
     wine_type: str
-    probabilities: list
+    probabilities: List[float]
 
 WINE_LABELS = {0: "Class 0 (Barolo)", 1: "Class 1 (Grignolino)", 2: "Class 2 (Barbera)"}
 
@@ -40,7 +41,6 @@ def health():
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest):
-    # 피처 검증은 테스트 모드와 무관하게 항상 실행
     if len(req.features) != 13:
         raise HTTPException(status_code=422, detail=f"피처 13개 필요, {len(req.features)}개 입력됨")
 
